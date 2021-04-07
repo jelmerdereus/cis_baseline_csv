@@ -60,11 +60,15 @@ if __name__ == '__main__':
 
         if match:
             ctrl_id = match.group(2)    # 9.3.3
-            ctrl_name = match.group(3)  # (L1) Ensure  'Windows Firewall ...
+            ctrl_name = match.group(3)  # (L1) Ensure  'Windows Firewall ...    FIXME this contains commas
             ctrl_type = match.group(8)  # Scored | Not Scored | Automated | Manual
 
             # add a line to the CSV file
             print(f'{ctrl_id},{ctrl_name},{ctrl_type}', file=csv_file)
+
+        # stop at the end of the TOC
+        elif 'Appendix:' in line:
+            break
 
     # done
     csv_file.close()
