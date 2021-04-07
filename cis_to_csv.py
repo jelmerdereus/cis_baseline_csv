@@ -1,11 +1,11 @@
 # importing required modules
 import re
 import sys
-import PyPDF2
+from typing import IO
 
 # help function
 def help() -> None:
-    print("\nUsage:\n\tpython3 cis_to_csv.py <PATH>\n")
+    print("\nUsage:\n\tpython3 cis_to_csv.py TEXT_FILE\n")
 
 
 # abort and provide help information
@@ -23,68 +23,50 @@ if __name__ == '__main__':
         help()
         sys.exit(1)
 
-    # read the PDF file
-    try:
-        pdf_file = open(sys.argv[1], 'rb')
-        pdf_reader = PyPDF2.PdfFileReader(pdf_file)
-    except Exception as err:
-        aborthelp('reading pdf file', err.__str__())
+    # read the CIS baseline controls file extracted using pdf2txt.py
+    txt_file: IO = None
+    txt_content = ''
 
-    # make an output file
     try:
-        csv_filename = sys.argv[1][:-4].split('/')[-1]+'.csv'
-        csv_file = open(f'./{csv_filename}', 'w')
+        txt_file = open(sys.argv[1], 'r', encoding='utf-8')
+        txt_content = txt_file.read()
     except Exception as err:
-        aborthelp('creating csv file', err.__str__())
+        aborthelp('reading txt file', err.__str__())
+
+    #make a CSV output file
+    csv_file: IO = None
+    try:
+       csv_filename = sys.argv[1][:-4].split('/')[-1]+'.csv'
+       csv_file = open(f'./{csv_filename}', 'w')
+    except Exception as err:
+       aborthelp('creating csv file', err.__str__())
 
     print('control,description,scored', file=csv_file)
 
-    toc_start = False
-    toc_end = False
+    # clean text
+    substitutions = [('\n', ' '), ('\t', ' '),('  ', ' ')]
 
-    # loop over Table of Content Pages
-    for page_id in range(pdf_reader.numPages):
-        page_object = pdf_reader.getPage(page_id)
-        page_text = page_object.extractText()
+    for chars, subst in substitutions:
+        txt_content = txt_content.replace(chars, subst)
 
-        # clean text
-        clean_text = page_text.replace('\n', '')
+    # a collection of individual CIS control lines
+    control_lines = [line for line in txt_content.split('..') if line != '']
 
-        # debug
-        print(f'\nCLEAN TEXT ON PAGE {page_id}:\n\n== START ==\n{clean_text}\n== END ==\n\n')
+    # match individual control lines with an eager pattern
+    pattern = "(([0-9]{1,3}\.[0-9]{1,3}(?:\.[0-9]{1,3}|)(?:\.[0-9]{1,3}|)(?:\.[0-9]{1,3}|))\s((?:\s|)(?:(\((L1|L2)\)\s)|)(?:\s|)(Ensure)\s([\s\S]{1,200}))\((Manual|Automated|Scored|Not Scored)\))"
 
-        if toc_end:
-            break
-        elif not toc_start:
-            if 'Table of Contents' not in page_text:
-                continue
-            else:
-                # first page of Table of Contents
-                toc_start = True
-        elif 'Appendix: ' in page_text:
-            # last page of Table of Contents
-            toc_end = True
-        
+    for line in control_lines:
+        match = re.search(pattern, line)
 
-        # use a regular expression to find CIS baseline controls
-        pattern = '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(?:\.[0-9]{1,3}|)(?:\.[0-9]{1,3}|)\s[^.]{10,300}\s\((?:Not\s|)Scored\)'
-        page_results = re.findall(pattern, clean_text)
+        if match:
+            ctrl_id = match.group(2)    # 9.3.3
+            ctrl_name = match.group(3)  # (L1) Ensure  'Windows Firewall ...
+            ctrl_type = match.group(8)  # Scored | Not Scored | Automated | Manual
 
-        # extract 3 pieces of information
-        for ctrl_string in page_results:
-            words = ctrl_string.split(' ')
+            # add a line to the CSV file
+            print(f'{ctrl_id},{ctrl_name},{ctrl_type}', file=csv_file)
 
-            control_id = words[0]
-            description = ' '.join(words[1:]).replace('(Scored)', '').replace('(Not Scored)', '')
-
-            if words[-1] == '(Scored)':
-                scored = 'Yes'
-            else:
-                scored = 'No'
-
-            print(f'{control_id},{description},{scored}', file=csv_file)
-
-    # all pages have been scanned
+    # done
     csv_file.close()
 
     print(f'\ndone! saved results in {csv_file.name}\n')
