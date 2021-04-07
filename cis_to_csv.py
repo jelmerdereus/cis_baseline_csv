@@ -1,7 +1,7 @@
 # importing required modules
 import re
 import sys
-from typing import IO
+
 
 # help function
 def help() -> None:
@@ -24,7 +24,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     # read the CIS baseline controls file extracted using pdf2txt.py
-    txt_file: IO = None
+    txt_file = None
     txt_content = ''
 
     try:
@@ -34,14 +34,14 @@ if __name__ == '__main__':
         aborthelp('reading txt file', err.__str__())
 
     #make a CSV output file
-    csv_file: IO = None
+    csv_file = None
     try:
        csv_filename = sys.argv[1][:-4].split('/')[-1]+'.csv'
        csv_file = open(f'./{csv_filename}', 'w')
     except Exception as err:
        aborthelp('creating csv file', err.__str__())
 
-    print('control,description,scored', file=csv_file)
+    print('control;description;type', file=csv_file)
 
     # clean text
     substitutions = [('\n', ' '), ('\t', ' '),('  ', ' ')]
@@ -53,18 +53,18 @@ if __name__ == '__main__':
     control_lines = [line for line in txt_content.split('..') if line != '']
 
     # match individual control lines with an eager pattern
-    pattern = "(([0-9]{1,3}\.[0-9]{1,3}(?:\.[0-9]{1,3}|)(?:\.[0-9]{1,3}|)(?:\.[0-9]{1,3}|))\s((?:\s|)(?:(\((L1|L2)\)\s)|)(?:\s|)(Ensure)\s([\s\S]{1,200}))\((Manual|Automated|Scored|Not Scored)\))"
+    pattern = "(([0-9]{1,3}\.[0-9]{1,3}(?:\.[0-9]{1,3}|)(?:\.[0-9]{1,3}|)(?:\.[0-9]{1,3}|))\s((?:\s|)(?:(\((L1|L2)\)\s)|)(?:\s+|)([\s\S]{1,200}))\((Manual|Automated|Scored|Not\s(?:\s+)Scored)\))"
 
     for line in control_lines:
         match = re.search(pattern, line)
 
         if match:
             ctrl_id = match.group(2)    # 9.3.3
-            ctrl_name = match.group(3)  # (L1) Ensure  'Windows Firewall ...    FIXME this contains commas
-            ctrl_type = match.group(8)  # Scored | Not Scored | Automated | Manual
+            ctrl_name = match.group(3)  # (L1) Ensure  'Windows Firewall ...    (contains commas, and all kinds of characters)
+            ctrl_type = match.group(7)  # Scored | Not Scored | Automated | Manual
 
             # add a line to the CSV file
-            print(f'{ctrl_id},{ctrl_name},{ctrl_type}', file=csv_file)
+            print(f'{ctrl_id};{ctrl_name};{ctrl_type}', file=csv_file)
 
         # stop at the end of the TOC
         elif 'Appendix:' in line:
