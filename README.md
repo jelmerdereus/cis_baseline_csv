@@ -12,7 +12,7 @@ first extract readable text from the first 50 pages
 $ pdf2txt.py .\CIS_Red_Hat8.pdf -m 50 -t text -o CIS_Red_Hat8.pdf_extract.txt CIS_Red_Hat8.pdf
 
 then use
-$ python3 cis_to_csv.py .\CIS_Red_Hat8.pdf_extract.txt
+$ python3 cis_to_csv.py .\CIS_benchmarks\CIS_Red_Hat8.pdf_extract.txt
 ```
 
 ### bulk example
