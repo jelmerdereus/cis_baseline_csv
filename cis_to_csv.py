@@ -43,8 +43,9 @@ if __name__ == '__main__':
 
     print('control;description;type', file=csv_file)
 
-    # clean text
-    substitutions = [('\n', ' '), ('\t', ' '),('  ', ' ')]
+    # clean text from newlines, tabs, spaces and Latin-1 characters
+    substitutions = [('\n', ' '), ('\t', ' '), ('  ', ' '), (u'\xa0', u' '), (u'\u00AD', '-'),\
+                     ('--‐', '-'), ('\\\'', '\''), ('\x0c', ' '), ('\x0b', ' ')]
 
     for chars, subst in substitutions:
         txt_content = txt_content.replace(chars, subst)
@@ -63,8 +64,12 @@ if __name__ == '__main__':
             ctrl_name = match.group(3)  # (L1) Ensure  'Windows Firewall ...    (contains commas, and all kinds of characters)
             ctrl_type = match.group(7)  # Scored | Not Scored | Automated | Manual
 
+            # sanitize excessive spaces for output
+            ctrl_name_clean = ' '.join([s for s in ctrl_name.split() if s != ''])
+            ctrl_type_clean = ' '.join([s for s in ctrl_type.split() if s != ''])
+
             # add a line to the CSV file
-            print(f'{ctrl_id};{ctrl_name};{ctrl_type}', file=csv_file)
+            print(f'{ctrl_id};{ctrl_name_clean};{ctrl_type_clean}', file=csv_file)
 
         # stop at the end of the TOC
         elif 'Appendix:' in line:
@@ -73,4 +78,4 @@ if __name__ == '__main__':
     # done
     csv_file.close()
 
-    print(f'\ndone! saved results in {csv_file.name}\n')
+    print(f'done! saved results in {csv_file.name}\n')
