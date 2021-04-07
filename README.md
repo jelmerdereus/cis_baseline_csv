@@ -1,8 +1,11 @@
 # cis_baseline_csv
 Transform CIS security baselines into CSV files with all controls and titles.
 
+### requirements
+Install pdfminer for it's CLI tool pdf2txt.py
 
-### syntax
+
+### usage
 
 ```
 first extract readable text from the first 50 pages
