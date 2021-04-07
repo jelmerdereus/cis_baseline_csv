@@ -12,24 +12,17 @@ then use
 $ python3 cis_to_csv.py .\CIS_Red_Hat8.pdf_extract.txt
 ```
 
-
-### example
-
-```
-$ python3 cis_to_csv.py .\CIS_Red_Hat_Enterprise_Linux_8_Benchmark_v1.0.0.pdf
-```
-
-
 ### bulk example
 
+######Powershell
 ```powershell
-Get-ChildItem '..\CIS benchmarks\' -Filter *.pdf | ForEach-Object {
+Get-ChildItem '..\CIS benchmarks\' -Filter *.pdf_extract.txt | ForEach-Object {
     python3 cis_to_csv.py ('..\CIS benchmarks\' + $_)
-}
 ```
 
-
-### example output
-```
-done! saved results in ./..\CIS benchmarks\text_versions\CIS_Microsoft_Windows.pdf_extract.csv
+######Bourne shell
+```shell
+for f in ../../security/CIS_Baseline/*_extract.txt; do
+  python3 cis_to_csv.py $f
+done
 ```
