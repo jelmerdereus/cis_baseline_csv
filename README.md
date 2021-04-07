@@ -20,13 +20,13 @@ $ python3 cis_to_csv.py .\CIS_Red_Hat8.pdf_extract.txt
 ###### Powershell
 ```powershell
 Get-ChildItem '..\CIS benchmarks\' -Filter *.pdf_extract.txt | ForEach-Object {
-  python3 cis_to_csv.py ('..\CIS benchmarks\' + $_)
+  python3 cis_to_csv.py ('..\CIS_benchmarks\' + $_)
 }
 ```
 
 ###### Bourne shell
 ```shell
-for f in ../../security/CIS_Baseline/*_extract.txt; do
+for f in ./CIS_benchmarks/*_extract.txt; do
   python3 cis_to_csv.py $f
 done
 ```
